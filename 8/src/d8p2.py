@@ -1,4 +1,4 @@
-from collections import defaultdict
+from copy import deepcopy
 from sys import stdin
 from typing import List, Dict, Set
 
@@ -28,6 +28,9 @@ e    f
 e    f
  gggg
 """
+all_segments: Set[str] = {
+  c for c in 'abcdefg'
+}
 segs_needed: Dict[int, Set[str]] = {
   0: str_to_set('abcefg'),
   1: str_to_set('cf'),
@@ -47,6 +50,17 @@ len_to_digit: Dict[int, int] = {
   4: 4,
   7: 8,
 }
+
+len_overlap: List[List[int]] = [
+  [0 for _j in range(10)]
+  for _i in range(10)
+]
+for digit, seq in segs_needed.items():
+  for digit_b, seq_b in segs_needed.items():
+    if digit == digit_b:
+      continue
+    size_overlap = len(seq.intersection(seq_b))
+    len_overlap[digit][digit_b] = size_overlap
 
 
 def build_map(
@@ -74,17 +88,14 @@ def build_map(
         seq_map[seq_string] = digit
 
 
+def gen_all_seg_maps(known_seg_map: Dict[str, str]) -> List[Dict[str, str]]:
+  segs_to_place = all_segments - set(known_seg_map.keys())
+  available_out_segs = all_segments - set(known_seg_map.values())
+  all_seg_maps = []
+  return all_seg_maps
+
+
 def main():
-  len_overlap: List[List[int]] = [
-    [0 for _j in range(10)]
-    for _i in range(10)
-  ]
-  for digit, seq in segs_needed.items():
-    for digit_b, seq_b in segs_needed.items():
-      if digit == digit_b:
-        continue
-      size_overlap = len(seq.intersection(seq_b))
-      len_overlap[digit][digit_b] = size_overlap
 
   for line in stdin:
     line = line.strip()
@@ -98,6 +109,7 @@ def main():
 
     seq_map: Dict[str, int] = {}
     num_map: Dict[int, str] = {}
+    seg_map: Dict[str, str] = {}
 
     for seq in in_seqs:
       size = len(seq)
@@ -106,6 +118,12 @@ def main():
         string = set_to_string(seq)
         num_map[digit] = string
         seq_map[string] = digit
+
+    seven_seq = str_to_set(num_map[7])
+    one_seq = str_to_set(num_map[1])
+    a_seg = seven_seq - one_seq
+    seg_map[next(a_seg.__iter__())] = 'a'
+    all_seg_maps = gen_all_seg_maps(seg_map)
 
     while len(num_map) < 10:
       build_map(len_overlap, num_map, seq_map, in_seqs)
