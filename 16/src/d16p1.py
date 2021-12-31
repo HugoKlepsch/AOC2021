@@ -2,7 +2,6 @@ import copy
 import sys
 from collections import defaultdict
 from enum import Enum
-import functools
 import re
 from sys import stdin
 from typing import List, Dict, Set, Tuple
@@ -38,18 +37,17 @@ class Point:
     return f'{{x: {self.x}, y: {self.y}}}'
 
 
-@functools.lru_cache(maxsize=None)
-def get_adjacent_points(p: Point, width: int, height: int) -> Set[Point]:
+def get_adjacent_points(p: Point, grid: List[List[int]]) -> List[Point]:
   points = []
   if p.x > 0:
     points.append(Point(p.x - 1, p.y))
-  if p.x < width - 1:
+  if p.x < len(grid[p.y]) - 1:
     points.append(Point(p.x + 1, p.y))
   if p.y > 0:
     points.append(Point(p.x, p.y - 1))
-  if p.y < height - 1:
+  if p.y < len(grid) - 1:
     points.append(Point(p.x, p.y + 1))
-  return set(points)
+  return points
 
 
 def get_extra_per_field(p: Point, width: int, height: int) -> int:
@@ -123,13 +121,11 @@ def main():
     for yi, line in enumerate(grid)
     for xi, p in enumerate(line)
   }
-  width = len(grid[0])
-  height = len(grid)
   while unvisited:
     closest_item = min(((p, distance[p]) for p in unvisited), key=lambda x: x[1])
     u = closest_item[0]
     unvisited.remove(u)
-    neighbors: Set[Point] = get_adjacent_points(u, width, height).intersection(unvisited)
+    neighbors: Set[Point] = set(get_adjacent_points(u, grid)).intersection(unvisited)
     for v in neighbors:
       alt = distance[u] + grid[v.y][v.x]
       if alt < distance[v]:
